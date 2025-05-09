@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Send, Mic, MicOff } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { HfInference } from '@huggingface/inference'
 
 type ChatPartner = {
   id: string
@@ -29,6 +30,8 @@ const chatPartners: ChatPartner[] = [
   { id: "colleague", name: "동료 현우", role: "직장 동료", avatar: "/placeholder.svg?height=100&width=100" },
   { id: "parent", name: "어머니", role: "부모님", avatar: "/placeholder.svg?height=100&width=100" },
 ]
+
+const hf = new HfInference(process.env.NEXT_PUBLIC_HUGGING_FACE_API_KEY)
 
 export default function ChatPage() {
   const [selectedPartner, setSelectedPartner] = useState<ChatPartner>(chatPartners[0])
@@ -65,8 +68,8 @@ export default function ChatPage() {
     ])
   }
 
-  const handleSendMessage = () => {
-    if (!input.trim()) return
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
 
     // 사용자 메시지 추가
     const userMessage: Message = {
@@ -74,47 +77,39 @@ export default function ChatPage() {
       sender: "user",
       text: input,
       timestamp: new Date(),
-    }
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-    setIsLoading(true)
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
 
-    // AI 응답 시뮬레이션
-    setTimeout(() => {
-      // 파트너 유형에 따른 모의 AI 응답 생성
-      let response = ""
-
-      switch (selectedPartner.id) {
-        case "friend":
-          response = "재밌네! 이번 주말에는 뭐 하고 싶어?"
-          break
-        case "teacher":
-          response = "흥미로운 관점이네요. 수업에서 논의한 내용과 어떻게 연관되는지 생각해 보셨나요?"
-          break
-        case "boss":
-          response = "의견 감사합니다. 이것이 우리의 분기별 목표에 어떻게 맞는지 논의해 봅시다."
-          break
-        case "colleague":
-          response = "공유해 주셔서 감사합니다. 저도 비슷한 것을 작업하고 있었어요. 함께 협력해 볼까요?"
-          break
-        case "parent":
-          response = "이야기해 줘서 고마워. 이것에 대해 어떤 기분이 들어?"
-          break
-        default:
-          response = "흥미롭네요. 그것에 대해 더 자세히 알려주세요."
-      }
+    try {
+      // 내부 API 엔드포인트로 요청
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input }),
+      });
+      const data = await res.json();
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: "ai",
-        text: response,
+        text: data[0]?.generated_text || "응답이 없습니다.",
         timestamp: new Date(),
-      }
-
-      setMessages((prev) => [...prev, aiMessage])
-      setIsLoading(false)
-    }, 1500)
-  }
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: "ai",
+        text: "죄송합니다. 응답을 생성하는 중에 오류가 발생했습니다.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const toggleRecording = () => {
     setIsRecording(!isRecording)
