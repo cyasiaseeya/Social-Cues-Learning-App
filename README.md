@@ -13,8 +13,10 @@
 본 프로젝트는 자폐 스펙트럼을 가진 사용자들이 사회적 상호작용을 안전하고 편안하게 연습할 수 있도록 돕는 웹 기반 플랫폼입니다.  
 세 가지 주요 기능군과 AI 피드백 시스템, 보상 메커니즘으로 구성되어 있습니다.
 
-## 2. 프로젝트 사용법
+배포 링크: https://hackathon-git-master-tafwhs-projects.vercel.app/?_vercel_share=HatzWcnEx1OMTi6RCDMf9D7FQvHD7jjy
 
+## 2. 프로젝트 사용법 
+local로 작동할시
 이 웹 애플리케이션은 별도의 설치 없이 웹 브라우저에서 바로 이용할 수 있습니다.
 
 ### 접속 방법
